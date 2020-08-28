@@ -23,3 +23,14 @@ export function hasClass(el, className) {
     let reg = new RegExp('(^|\\s)' + className + '(\\s|$)')
     return reg.test(el.className)
 }
+
+// 封装
+export function getData(el, name, val) {
+    const perfix = 'data-'
+    name = perfix + name
+    if (val) {
+        return el.setAttribute(name, val)
+    } else {
+        return el.getAttribute(name)
+    }
+}
