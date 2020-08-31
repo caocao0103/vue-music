@@ -11,7 +11,12 @@
       <li v-for="(group, index) in data" :key="index" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li v-for="(item,index) in group.items" :key="index" class="list-group-item">
+          <li 
+            v-for="(item,index) in group.items" 
+            :key="index" 
+            class="list-group-item"
+            @click="selectItem(item)"
+          >
             <img class="avatar" v-lazy="item.avatar" alt />
             <span class="name">{{item.name}}</span>
           </li>
@@ -33,20 +38,29 @@
         >{{item}}</li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle" ref="fixed">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading></loading>
+    </div>
   </scroll>
 </template>
 
 <script>
 import Scroll from "@/base/scroll/scroll";
 import { getData } from "@/common/js/dom";
+import Loading from '@/base/loading/loading';
 
 const ANCHOR_HEIGHT = 18;
+const TITLE_HEIGHT = 30
 
 export default {
   data() {
     return {
       scrollY: -1,
       currentIndex: 0,
+      diff: -1
     };
   },
   props: {
@@ -62,6 +76,12 @@ export default {
         return group.title.substr(0, 1);
       });
     },
+    fixedTitle() {
+      if(this.scrollY > 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
+    }
   },
   watch: {
     data() {
@@ -82,15 +102,28 @@ export default {
         let height2 = listHeight[i + 1];
         if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i;
+
+          this.diff = height2 + newY
+
           return;
         }
       }
       // 当滚动到底部，且-newY大于最后一个元素的上限
       this.currentIndex = listHeight.length - 2;
     },
+
+    diff(newVal) {
+      let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT ? newVal - TITLE_HEIGHT : 0)
+      if(this.fixedTop == fixedTop){
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
+    }
   },
   components: {
     Scroll,
+    Loading
   },
   created() {
     this.touch = {};
@@ -99,6 +132,9 @@ export default {
     this.probeType = 3;
   },
   methods: {
+    selectItem(item) {
+      this.$emit('select', item)
+    },
     // 点击字母滚动到对应的地方
     onShortcutTouchStart(e) {
       // 拿到锚点下标
@@ -119,8 +155,16 @@ export default {
       this.scrollY = pos.y;
     },
     _scrollTo(index) {
-      this.scrollY = -this.listHeight[index]
+      if(!index && index === 0) {
+        return
+      }
+      if(index < 0) {
+        index = 0
+      }else if(index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
 
+      this.scrollY = -this.listHeight[index]
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0);
     },
     _calculateHeight() {
@@ -134,6 +178,7 @@ export default {
         this.listHeight.push(height);
       }
     },
+
   },
 };
 </script>
