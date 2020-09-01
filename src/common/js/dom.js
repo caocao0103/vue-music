@@ -34,3 +34,40 @@ export function getData(el, name, val) {
         return el.getAttribute(name)
     }
 }
+
+// 对musiclist里面的webkit属性进行封装
+let elementStyle = document.createElement('div').style
+
+// 供应商
+let vendor = (() => {
+    let transformName = {
+        webkit: 'webkitTransform', //谷歌
+        Moz: 'MozTransform', // 火狐
+        o: 'OTransform', //欧朋
+        ms: 'msTransform', //ie
+        standard: 'transform'  //标准
+    }
+
+    for (let key in transformName) {
+        // 判断是那种供应商
+        if(elementStyle[transformName[key]] !== undefined){
+            return key
+        }
+    }
+
+    // 如果都不支持
+    return false
+})()
+
+export function perfixStyle(style) {
+    if(vendor === false) {
+        return false
+    }
+
+    if(vendor == 'standard'){
+        return style
+    }
+    
+    // style.charAt(0).topUpperCase()首字母大写，style.substr(1)再加上剩余部分
+    return vendor + style.charAt(0).toUpperCase() + style.substr(1)
+}
