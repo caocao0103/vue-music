@@ -47,7 +47,7 @@ import {perfixStyle} from '@/common/js/dom'
       progressTouchStart(e) {
         this.touch.initiated = true //初始化
         this.touch.startX = e.touches[0].pageX //横向坐标
-        this.touch.left = this.$refs.progerss.clientWidth // 开始拖动的时候当前进度条偏移了多少
+        this.touch.left = this.$refs.progress.clientWidth // 开始拖动的时候当前进度条偏移了多少
       },
       progressTouchMove(e) {
         // 没有进入touchstart 直接进入 touchmove 的时候给 return 掉
@@ -82,7 +82,7 @@ import {perfixStyle} from '@/common/js/dom'
       },
       _triggerPercent() {
         const barWidth = this.$refs.progressBar.clientWidth - progressBtnWidth
-        const percent = this.$refs.progerss.clientWidth / barWidth  //运动的百分比
+        const percent = this.$refs.progress.clientWidth / barWidth  //运动的百分比
         this.$emit('percentChange', percent) //改变
       }
     }
