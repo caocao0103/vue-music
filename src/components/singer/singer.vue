@@ -1,6 +1,6 @@
 <template>
-  <div class="singer">
-    <list-view :data="singers" @select="selectSinger"></list-view>
+  <div class="singer" ref="singer">
+    <list-view :data="singers" @select="selectSinger" ref="list"></list-view>
     <router-view></router-view>
   </div>
 </template>
@@ -11,11 +11,13 @@
   import Singer from '@/common/js/singer';
   import ListView from '@/base/listview/listview';
   import {mapMutations} from 'vuex';
+  import {playlistMixin} from '@/common/js/mixin'
 
   const HOT_NAME = '热门'
   const HOT_SINGER_LEN = 10
 
   export default {
+    mixins: [playlistMixin],
     data() {
       return {
         singers: []
@@ -28,6 +30,14 @@
       this._getSingerList()
     },
     methods: {
+      // mixin 里面的方法
+      handlePlaylist(playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        // 因为是vue component 所以要取到元素
+        this.$refs.singer.style.bottom = bottom
+        this.$refs.list.refresh() //重新刷新一下，让 scroll 重新计算一次
+      },  
+
       selectSinger(singer) {
         this.$router.push({
           path: `/singer/${singer.id}`

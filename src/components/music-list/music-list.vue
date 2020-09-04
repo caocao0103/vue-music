@@ -18,7 +18,7 @@
 
     <scroll @scroll="scroll" :probe-type="probeType" :listen-scroll="listenScroll" :data='songs' class="list" ref="list">
       <div class="song-list-wrapper">
-        <song-list @select='selectItem' :songs="songs"></song-list>
+        <song-list @select='selectItem' :songs="songs" :rank="rank"></song-list>
       </div>
       <div class="loading-container" v-show="!songs.length">
         <loading></loading>
@@ -32,7 +32,7 @@ import Scroll from '@/base/scroll/scroll'
 import SongList from '@/base/song-list/song-list'
 import {perfixStyle} from '@/common/js/dom';
 import Loading from '@/base/loading/loading';
-
+import {playlistMixin} from '@/common/js/mixin'
 import {mapActions} from 'vuex';
 
 const RESERVER_HEIGHT = 40
@@ -41,6 +41,7 @@ const backdrop = perfixStyle('backdrop-filter')
 
 
   export default {
+    mixins: [playlistMixin],
     data() {
       return {
         scrollY: 0
@@ -65,6 +66,10 @@ const backdrop = perfixStyle('backdrop-filter')
       title: {
         type: String,
         default: ''
+      },
+      rank: {
+        type: Boolean,
+        default: false
       }
     },
     computed: {
@@ -82,6 +87,13 @@ const backdrop = perfixStyle('backdrop-filter')
       this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
     },
     methods: {
+      handlePlaylist(playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        // 因为是vue component 所以要取到元素
+        this.$refs.list.$el.style.bottom = bottom
+        this.$refs.list.refresh() //重新刷新一下，让 scroll 重新计算一次
+      },  
+
       scroll(pos) {
         this.scrollY = pos.y
       },

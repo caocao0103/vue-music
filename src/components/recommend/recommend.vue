@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend">
+  <div class="recommend" ref="recommend">
     <!-- :data="discList" 把数据传给组件后就不需要重新刷新，来重新计算高度 -->
     <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
@@ -16,7 +16,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li v-for="(item, index) in discList" :key="index" class="item">
+            <li @click="selectItem(item)" v-for="(item, index) in discList" :key="index" class="item">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl" alt="">
               </div>
@@ -32,6 +32,7 @@
         <loading>></loading>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -41,8 +42,11 @@ import Scroll from '@/base/scroll/scroll';
 import Slider from "@/base/slider/slider";
 import { getRecommend, getDisList } from "@/api/recommend.js";
 import { ERR_OK } from "@/api/config";
+import {playlistMixin} from '@/common/js/mixin'
+import {mapMutations} from 'vuex';
 
 export default {
+  mixins: [playlistMixin],
   data() {
     return {
       recommends: [],
@@ -59,6 +63,23 @@ export default {
     Loading
   },
   methods: {
+    
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      // 因为是vue component 所以要取到元素
+      this.$refs.recommend.style.bottom = bottom
+      this.$refs.scroll.refresh() //重新刷新一下，让 scroll 重新计算一次
+    }, 
+
+    selectItem(item) {
+      this.$router.push({
+        path: `/recommend/${item.dissid}`
+      })
+
+      // 写入store
+      this.setDisc(item)
+    },
+
     // 推荐轮播
     _getRecommend() {
       getRecommend().then((res) => {
@@ -85,7 +106,11 @@ export default {
         this.$refs.scroll.refresh()
         this.checkLoaded = true
       }
-    }
+    },
+
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    })
   },
 };
 </script>
