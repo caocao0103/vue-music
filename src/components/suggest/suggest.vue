@@ -2,10 +2,13 @@
   <scroll class="suggest" 
           :data="result" 
           :pullup="pullup"
+          :beforeScroll="beforeScroll"
           @scrollToEnd="searchMore"
+          ref="suggest"
+          @beforeScroll="listScroll"
   >
     <ul class="suggest-list">
-      <li class="suggest-item" v-for="(item,index) in result" :key="index">
+      <li @click="selectItem(item)" class="suggest-item" v-for="(item,index) in result" :key="index">
         <div class="icon">
           <i :class="getIconCls(item)"></i>
         </div>
@@ -15,15 +18,21 @@
       </li>
       <Loading v-show="hasMore" title=""></Loading>
     </ul>
+    <div class="no-result-wrapper" v-show="!hasMore && !result.length">
+      <no-result title="抱歉，暂无搜索结果"></no-result>
+    </div>
   </scroll>  
 </template>
-
+ 
 <script>
 import { search } from '@/api/search'
 import { ERR_OK } from '@/api/config'
 import { createSong, isValidMusic, processSongsUrl } from '@/common/js/song'
+import {mapMutations, mapActions} from 'vuex';
 import Scroll from '@/base/scroll/scroll';
 import Loading  from '@/base/loading/loading'
+import Singer from '@/common/js/singer';
+import NoResult from '@/base/no-result/no-result';
 
 
 const TYPE_SINGER = 'singer'
@@ -35,6 +44,7 @@ const perpage = 20
         page: 1,
         result: [],
         pullup: true, //开启上滑加载
+        beforeScroll: false,
         hasMore: true, 
       }
     },
@@ -50,7 +60,8 @@ const perpage = 20
     },
     components: {
       Scroll,
-      Loading
+      Loading,
+      NoResult
     },
     watch: {
       query() {
@@ -61,11 +72,11 @@ const perpage = 20
       // 获取搜索接口
       search() {
         this.page = 1
-        this.searchMore = true
+        this.hasMore = true
+        this.$refs.suggest.scrollTo(0, 0)
         search(this.query, this.page, this.showSinger, perpage).then((res) => {
           if(res.code === ERR_OK){
             this._getResult(res.data).then((result) => {
-              // console.log(result)
               this.result = result
             })
             this._checkMore(res.data)
@@ -75,7 +86,7 @@ const perpage = 20
 
       getIconCls(item) {
         if(item.type === TYPE_SINGER) {
-          return 'icon-min'
+          return 'icon-mine'
         }else{
           return 'icon-music'
         }
@@ -97,12 +108,39 @@ const perpage = 20
         this.page++ 
         search(this.query, this.page, this.showSinger, perpage).then((res) => {
           if (res.code === ERR_OK) {
-            this._genResult(res.data).then((result) => {
+            this._getResult(res.data).then((result) => {
               this.result = this.result.concat(result)
             })
             this._checkMore(res.data)
           }
         })
+      },
+
+      // 跳转详情
+      selectItem(item) {
+        // 如果是歌手
+        if(item.type === TYPE_SINGER) {
+          const singer = new Singer({
+            id: item.singermid,
+            name: item.singername
+          })
+
+          this.$router.push({
+            path: `/search/${singer.id}`
+          })
+          this.setSinger(singer)
+        }else{
+          this.insertSong(item)
+        }
+        this.$emit('select')
+      },
+
+      listScroll() {
+        this.$emit('listScroll')
+      },
+
+      refresh() {
+        this.$refs.suggest.refresh()
       },
 
       // 检查是否有更多
@@ -134,6 +172,12 @@ const perpage = 20
         return ret
       },
 
+      ...mapMutations({
+        setSinger: 'SET_SINGER'
+      }),
+      ...mapActions([
+        'insertSong'
+      ])
     }
   }
 </script>
