@@ -72,4 +72,10 @@ const router = new VueRouter({
   routes
 })
 
+// 在VUE中路由遇到Error: Avoided redundant navigation to current location:报错显示是路由重复，
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
+
 export default router

@@ -13,6 +13,7 @@ Vue.use(VueLazyload, {
   loading: require('./common/image/default.png'),
 })
 
+
 new Vue({
   router,
   store,
