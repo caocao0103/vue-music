@@ -4,14 +4,16 @@
     <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
         <div class="slider-wrapper" v-if="recommends.length">
-          <!-- 轮播图组件 -->
-          <slider>
-            <div v-for="(item, index) in recommends" :key="index">
-              <a :href="item.linkUrl">
-                <img @load="loadImage" :src="item.picUrl" alt />
-              </a>
-            </div>
-          </slider>
+          <div class="slider-content">
+            <!-- 轮播图组件 -->
+            <slider ref="slider">
+              <div v-for="(item, index) in recommends" :key="index">
+                <a :href="item.linkUrl">
+                  <img @load="loadImage" :src="item.picUrl" alt />
+                </a>
+              </div>
+            </slider>
+          </div>
         </div>
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
@@ -56,6 +58,11 @@ export default {
   created() {
     this._getRecommend()
     this._getDisList()
+  },
+  activated() {
+    setTimeout(() => {
+      this.$refs.slider && this.$refs.slider.refresh()
+    }, 20)
   },
   components: {
     Slider,
@@ -103,8 +110,11 @@ export default {
     loadImage() {
       // 调用组件里面 refresh() 方法
       if(!this.checkLoaded) { //设置一个标志位确保只执行一次
-        this.$refs.scroll.refresh()
+        // this.$refs.scroll.refresh()
         this.checkLoaded = true
+        setTimeout(() => {
+            this.$refs.scroll.refresh()
+          }, 20)
       }
     },
 
@@ -130,6 +140,14 @@ export default {
         position: relative
         width: 100%
         overflow: hidden
+        height: 0
+        padding-top: 40%
+        .slider-content
+          position: absolute
+          top: 0
+          left: 0
+          width: 100%
+          height: 100%
       .recommend-list
         .list-title
           height: 65px

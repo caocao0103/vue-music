@@ -102,7 +102,7 @@
     <audio 
       ref="audio" 
       :src="currentSong.url" 
-      @canplay="ready" 
+      @play="ready" 
       @error="error"
       @timeupdate="updateTime"
       @ended="end"
@@ -256,6 +256,7 @@ export default {
       }
       if(this.playlist.length === 1) { //处理歌曲列表只为 1 的情况
         this.loop()
+        return
       }else{
         let index = this.currentIndex + 1
         if(index === this.playlist.length) { //到最后一首歌时，从头开始
@@ -276,6 +277,7 @@ export default {
       }
       if(this.playlist.length === 1) {
         this.loop()
+        return
       }else{
         let index = this.currentIndex - 1
         if(index === -1) {
@@ -386,6 +388,9 @@ export default {
     // 获取歌词
     getLyric() {
       this.currentSong.getLyric().then((lyric) => {
+        if(this.currentSong.lyric !== lyric) {
+          return
+        }
         // this.handleLyric 歌词每次改变的时候的回调
         this.currentLyric = new Lyric(lyric, this.handleLyric) 
         // console.log(this.currentLyric)
@@ -498,6 +503,9 @@ export default {
       }
       if(this.currentLyric) { //切换歌曲停止
         this.currentLyric.stop()
+        this.currentTime = 0
+        this.playingLyric = ''
+        this.currentLineNum = 0
       }
       // this.$nextTick(() => {
       //   this.$refs.audio.play();
@@ -505,7 +513,8 @@ export default {
       //   this.getLyric() //获取歌词
       // });
       // 为了解决微信后台不执行
-      setTimeout(() => {
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => {
         this.$refs.audio.play();
         this.getLyric() //获取歌词
       }, 1000)
